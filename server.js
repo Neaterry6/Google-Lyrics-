@@ -1,32 +1,53 @@
-const express = require("express");
-const axios = require("axios");
-const cheerio = require("cheerio");
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.get("/lyrics", async (req, res) => {
-  const { query } = req.query;
-  if (!query) return res.status(400).send("Missing 'query' parameter.");
+// Middleware to parse query params
+app.use(express.json());
+
+// Lyrics route
+app.get('/lyrics', async (req, res) => {
+  const query = req.query.query;
+
+  if (!query) {
+    return res.status(400).json({ error: 'Query parameter "query" is required' });
+  }
 
   try {
+    // Make a request to Google search with the lyrics query
     const response = await axios.get(`https://www.google.com/search?q=${encodeURIComponent(query)}+lyrics`, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Cookie": process.env.COOKIE
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Cookie': process.env.COOKIE,
+      },
     });
 
+    // Log the raw HTML response to debug the issue
+    console.log(response.data);  // Log the full HTML to inspect
+
+    // Load the HTML with Cheerio
     const $ = cheerio.load(response.data);
-    const lyrics = $('div[data-lyricid]').text() || $('div[jsname="U7izfe"]').text();
 
-    if (!lyrics) return res.send("Lyrics not found.");
-    res.send(lyrics);
+    // Try to find lyrics based on the current structure
+    const lyrics = $('div[jsname="B6iNxe"] span').text().trim(); // Adjust the selector as needed
 
+    // If lyrics are found, send them as the response
+    if (lyrics) {
+      return res.status(200).json({ lyrics });
+    }
+
+    // If no lyrics found, return an error message
+    return res.status(404).json({ message: 'Lyrics not found.' });
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Failed to fetch lyrics.");
+    console.error('Error scraping lyrics:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
-app.listen(PORT, () => console.log(`Lyrics API running on port ${PORT}`))
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
