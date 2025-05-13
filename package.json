@@ -1,13 +1,27 @@
 {
   "name": "google-lyrics-api",
   "version": "1.0.0",
-  "description": "Simple API to scrape song lyrics from Google search results.",
+  "description": "Simple lyrics scraping API using Google search results and cookie-authenticated requests.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "keywords": [
+    "lyrics",
+    "scraper",
+    "google",
+    "api",
+    "express",
+    "cheerio"
+  ],
+  "author": "YourName",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
+}
